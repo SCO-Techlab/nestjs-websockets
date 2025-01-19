@@ -2,7 +2,7 @@
   "name": "@sco-techlab/nestjs-websockets",
   "version": "10.0.1",
   "author": "SCO Techlab (Santiago Comeras Oteo) <sco.techlab@gmail.com> (https://web.sco-techlab.es/)",
-  "description": "Websocket management for Nest.JS framework",
+  "description": "Websocket (Clients, events) management for Nest.JS framework",
   "main": "index.js",
   "scripts": {},
   "repository": {
@@ -17,7 +17,11 @@
     "Websockets",
     "Events",
     "Gateway",
-    "WebsocketGateway"
+    "WebsocketGateway",
+    "Clients",
+    "WsClients",
+    "Sockets",
+    "Socket IO"
   ],
   "peerDependencies": {
     "@nestjs/common": "^10.0.0",
