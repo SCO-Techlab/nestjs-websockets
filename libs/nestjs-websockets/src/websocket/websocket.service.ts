@@ -15,6 +15,12 @@ export class WebsocketService {
     return this.websocketGateway.clients;
   }
 
+  public client(id: string): Socket {
+    if (this.clients.length <= 0) return undefined;
+    const exist_client: Socket = this.clients.find((client: Socket) => client.id == id);
+    return exist_client ? exist_client : undefined;
+  }
+
   emit(event: string, args?: any[]): boolean {
     try {
       this.server.emit(event, args && args.length > 0 ? args : true);
