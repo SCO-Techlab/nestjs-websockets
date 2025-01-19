@@ -1,7 +1,7 @@
 import { NestFactory } from '@nestjs/core';
 import { Logger, INestApplication } from '@nestjs/common';
-import { AppModule } from './app.module';
 import { WebsocketAdapter } from '@app/nestjs-websockets';
+import { AppModule } from './app.module';
 
 async function bootstrap() {
 
