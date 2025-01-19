@@ -3,136 +3,107 @@
 </p>
 
 ## Nest.JS i18n
-Nest.JS i18n is a easy translate service for backend messages, is based in json files saved in a folder path.
+Nest.JS Websockets is a Websocket gateway module (Clients, events) management for Nest.JS framework.
 
 ### Get Started
 - Install dependency
 <pre>
-npm i @sco-techlab/nestjs-websockets
+npm i @sco-techlab/nestjs-websockets && npm i @nestjs/platform-socket.io
 </pre>
-- Import Translate module in your 'app.module.ts' file, register or registerAsync methods availables
+- Import Websocket module in your 'app.module.ts' file, register or registerAsync methods availables
 <pre>
+import { Module } from '@nestjs/common';
+import { AppService } from './app.service';
+import { WebsocketModule } from '@app/nestjs-websockets';
+
 @Module({
   imports: [
 
-    // Register module example
-    TranslateModule.register({
-      default: 'en',
-      path: './i18n',
-      encoding: 'utf8',
-      header: 'accept-language',
-    }),
+    // Import WebsocketModule without register, you must import it on any other module to use it on the module
+    //WebsocketModule,
 
-    // RegisterAsync module example
-    TranslateModule.registerAsync({
-      useFactory: () => {
-        return {
-          default: 'en',
-          path: './i18n',
-          encoding: 'utf8',
-          header: 'accept-language',
-        };
-      },
-    }),
+    // Import WebsocketMoudle with register method to use it globally in the application
+    WebsocketModule.register(),
   ],
+  providers: [AppService],
 })
+
 export class AppModule {}
 </pre>
-- Module import is global mode, to use trasnalte service only need constructor dependency inyection
-- Catch your 'accept-language' header request in your interceptor and set your current language
+- You can import the module in global mode, to use trasnalte service only need constructor dependency inyection
+- Add your Websocket Adapter to your application in 'main.ts' file
 <pre>
+import { NestFactory } from '@nestjs/core';
+import { Logger, INestApplication } from '@nestjs/common';
+import { WebsocketAdapter } from '@app/nestjs-websockets';
+import { AppModule } from './app.module';
+
+async function bootstrap() {
+
+  const app: INestApplication = await NestFactory.create(AppModule, 
+    { 
+      logger: new Logger(),
+    }
+  );
+
+  app.useWebSocketAdapter(new WebsocketAdapter(app));
+
+  await app.listen(3005);
+  console.log(`[App] App started in 'http://localhost:3005'`);
+}
+bootstrap();
+</pre>
+
+
+### Service example
+<pre>
+import { Injectable } from "@nestjs/common";
+import { SubscribeEvent, WebsocketService } from "@app/nestjs-websockets";
+
 @Injectable()
-export class AppInterceptor implements NestInterceptor {
+export class AppService {
 
-  constructor(private readonly translateService: TranslateService) {}
+  // Inject the WebsocketService to access the server and clients
+  constructor(private readonly websocketService: WebsocketService) {
 
-  intercept(context: ExecutionContext, next: CallHandler): Observable&lt;any&gt; {
-    const request = context.switchToHttp().getRequest();
-    this.translateService.setCurrentLang(this.translateService.requestLanguage(request));
-    
-    return next.handle().pipe(
-      tap(() => {
-        
-      }),
-      catchError((error) => {
-        return throwError(() => error);
-      }),
-    );
+    // Subscribe to the 'handleConnection' event to get the client sockets
+    this.websocketService.handleConnection().subscribe((socket) => {
+      console.log(`[handleConnection] Client connected:`, socket['handshake'].headers.origin, socket.id);
+
+      // Subscribe to the 'event_init' event to get the client sockets
+      this.websocketService.client(socket.id).on('event_init', (data: any[]) => {
+        console.log(`[handleConnection - onClient] Event received from client '${socket.id}':`, data);
+      });
+    });
+
+    // Subscribe to the 'handleDisconnect' event to get the client sockets
+    this.websocketService.handleDisconnect().subscribe((socket) => {
+      console.log(`[handleDisconnect] Client disconnected:`, socket['handshake'].headers.origin);
+    });
+  }
+
+  // Use decorator to subscribe a event emited by one client
+  @SubscribeEvent('event_init')
+  handleEventInit(event: string, client: string, args?: any[]): void {
+    console.log(`[WebsocketGateway - handleEventInit] Event '${event}' received from client '${client}':`, args);
+    return;
+  }
+
+  // Use decorator to subscribe on any event emited by any clients, example 1
+  @SubscribeEvent()
+  handleGlobalOne(event: string, client: string, args?: any[]): void {
+    console.log(`[WebsocketGateway - handleGlobalOne] Event '${event}' dispatch on global subscription (1) from client '${client}':`, args);
+    return;
+  }
+
+  // Use decorator to subscribe on any event emited by any clients, example 2
+  @SubscribeEvent()
+  handleGlobalTwo(event: string, client: string, args?: any[]): void {
+    console.log(`[WebsocketGateway - handleGlobalTwo] Event '${event}' dispatch on global subscription (2) from client '${client}':`, args);
+    return;
   }
 }
 </pre>
-- Add your interceptor to your 'app.module.ts' file if you have created it
-<pre>
-@Module({
-  providers: [
-    {
-      provide: APP_INTERCEPTOR,
-      useClass: AppInterceptor,
-    },
-  ],
-})
-export class AppModule {}
-</pre>
-
-
-### Nest.JS i18n config
-<pre>
-export class TranslateConfig {
-  default: string; // default file name who whill load if no accept-language header provided or accept-language header value not exists
-  path: string; // Path of the folder who contains the translate.json files
-  encoding?: BufferEncoding; // Encoding of the translate.json file by default value is 'utf8'
-  header?: string; // Header name to find the language to set to the service in the interceptor by default value is 'accept-language'
-}
-</pre>
-
-
-### Translate files (JSON)
-You should create the translation files with the following format 'language.json' such as 'en.json', 'es.json'... <br>
-All translation files should be in the same folder, which is the path we configured in the module<br>
-
-- En translates
-<pre>
-{
-  "hello-world": "Hello world",
-  "tests": {
-    "test1": {
-      "1": "First translate of tests / test1 block"
-    }
-  }
-}
-</pre>
-- Es translates
-<pre>
-{
-  "hello-world": "Hola mundo",
-  "tests": {
-    "test1": {
-      "1": "Primera traducción del bloque tests / test1"
-    }
-  }
-}
-</pre>
-
-### Translate method
-For single translate like 'hello-world' in last translate files example you should pass the label name like argument
-<pre>
-translateService.translate('hello-world')
-</pre>
-
-For nested translates like 'tests / test1 / 1' you should pass the blocks and the translate of the JSON object like the last example
-<pre>
-translateService.translate('tests.test1.1')
-</pre>
-
-An other example for nested translate like 'tests / test1 / 1' you can pass the blocks of the JSON object in parent order as a string[] value
-<pre>
-translateService.translate(['tests', 'test1', '1'])
-</pre>
-
-If the translation does not exist, the method will return as a result the name of the translation passed by parameter to the translate method
-
-### Examples
-- Live coding: [Stackblitz example](https://stackblitz.com/edit/sco-techlab-nestjs-websockets?file=src%2Fapp.interceptor.ts)
 
 ## Author
 Santiago Comeras Oteo
