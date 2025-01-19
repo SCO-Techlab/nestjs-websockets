@@ -9,6 +9,8 @@ import {
 import { Subject } from 'rxjs';
 import { Server, ServerOptions, Socket } from 'socket.io';
 import { WebsocketClientsManagerService } from './websocket.clients.manager.service';
+import { getInitialDecoratorsEvents } from './websocket.decorator';
+import { WebsocketEvent } from './websocket.event';
 
 @Injectable()
 @WebSocketGateway()
@@ -19,9 +21,13 @@ export class WebsocketGateway implements OnGatewayInit, OnGatewayConnection, OnG
   private _connectionSubject: Subject<Socket>;
   private _disconnectionSubject: Subject<Socket>;
 
+  private _decoratorEvents: WebsocketEvent[];
+
   constructor(private readonly managerService: WebsocketClientsManagerService) {
     this._connectionSubject = new Subject<Socket>();
     this._disconnectionSubject = new Subject<Socket>();
+
+    this._decoratorEvents = [];
   }
 
   public get server(): Server {
@@ -38,6 +44,10 @@ export class WebsocketGateway implements OnGatewayInit, OnGatewayConnection, OnG
 
   public get clients(): Socket[] {
     return this.managerService.values();
+  }
+
+  async onModuleInit(): Promise<void> {
+    this._decoratorEvents = getInitialDecoratorsEvents() ?? [];
   }
 
   // This method is necessary to correctly implement 'OnGatewayInit'
@@ -63,5 +73,15 @@ export class WebsocketGateway implements OnGatewayInit, OnGatewayConnection, OnG
     }
 
     this._connectionSubject.next(client);
+    if (!this._decoratorEvents || this._decoratorEvents.length <= 0) return;
+
+    this.managerService.get(client.id).onAny(async (event: string, args?: any[]) => {
+      for (const decorator_event of this._decoratorEvents) {
+        if (decorator_event.event === event || decorator_event.event === '*') {
+          const method: Function = decorator_event.target[decorator_event.methodName];
+          await method(event, client.id, args); //method.apply(existDecoratorEvent.target, [event, args]);
+        }
+      }
+    });
   }
 }
