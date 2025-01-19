@@ -64,16 +64,4 @@ export class WebsocketGateway implements OnGatewayInit, OnGatewayConnection, OnG
 
     this._connectionSubject.next(client);
   }
-
-  // @SubscribeMessage('events')
-  // handleEvent(@MessageBody() data: string): string {
-  //   console.log(`[WebsocketGateway - handleEvent] Event received:`, data);
-  //   return data;
-  // }
-
-  // @SubscribeMessage('events1')
-  // handleEvent1(@MessageBody() data: string): string {
-  //   console.log(`[WebsocketGateway - handleEvent] Event received:`, data);
-  //   return data;
-  // }
 }
