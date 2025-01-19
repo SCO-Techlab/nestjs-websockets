@@ -1,0 +1,31 @@
+{
+  "name": "@sco-techlab/nestjs-websockets",
+  "version": "10.0.1",
+  "author": "SCO Techlab (Santiago Comeras Oteo) <sco.techlab@gmail.com> (https://web.sco-techlab.es/)",
+  "description": "Websocket management for Nest.JS framework",
+  "main": "index.js",
+  "scripts": {},
+  "repository": {
+    "type": "git",
+    "url": "git+ssh://git@github.com:SCO-Techlab/nestjs-websockets.git"
+  },
+  "homepage": "https://github.com/SCO-Techlab/nestjs-websockets",
+  "keywords": [
+    "Nest",
+    "Nestjs",
+    "SCO Techlab",
+    "Websockets",
+    "Events",
+    "Gateway",
+    "WebsocketGateway"
+  ],
+  "peerDependencies": {
+    "@nestjs/common": "^10.0.0",
+    "@nestjs/platform-socket.io": "^10.0.0",
+    "reflect-metadata": "^0.1.13"
+  },
+  "dependencies": {
+    "@nestjs/websockets": "^10.0.0",
+    "socket.io": "^4.7.4"
+  }
+}
