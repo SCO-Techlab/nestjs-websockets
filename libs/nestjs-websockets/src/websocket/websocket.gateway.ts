@@ -55,7 +55,7 @@ export class WebsocketGateway implements OnGatewayInit, OnGatewayConnection, OnG
     // This timeout only has the purpose of coordinating the initial log with the Nest message of load
     // After the successful load of Nest message 'Nest application successfully started'
     setTimeout(() => {
-      console.log(`[WebsocketGateway] Websocket started on port: ${this._server.httpServer.address()['port']}`);
+      console.log(`[WebsocketGateway] Websocket started successfully`);
     }, 1);
   }
 
